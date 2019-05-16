@@ -46,8 +46,7 @@ public class WebCheckTaskImpl implements IWebCheckTask {
 	private int retryCount;
 
 	private Set<EndPoint> endPointSet = new TreeSet<>();
-
-
+	
 	/**
 	 * 上一次开始执行时间点之后多长时间再执行
 	 */
