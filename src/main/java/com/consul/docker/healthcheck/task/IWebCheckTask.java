@@ -7,5 +7,9 @@ package com.consul.docker.healthcheck.task;
  * @date 2019-05-16
  */
 public interface IWebCheckTask {
+
+	/**
+	 * 定义监控检查任务
+	 */
 	void scheduled();
 }

@@ -1,9 +1,9 @@
 package com.consul.docker.healthcheck.task.impl;
 
-import com.orbitz.consul.Consul;
-import com.orbitz.consul.KeyValueClient;
 import com.consul.docker.healthcheck.entity.EndPoint;
 import com.consul.docker.healthcheck.task.IWebCheckTask;
+import com.orbitz.consul.Consul;
+import com.orbitz.consul.KeyValueClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
@@ -14,7 +14,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +45,7 @@ public class WebCheckTaskImpl implements IWebCheckTask {
 	private int retryCount;
 
 	private Set<EndPoint> endPointSet = new TreeSet<>();
-	
+
 	/**
 	 * 上一次开始执行时间点之后多长时间再执行
 	 */
@@ -54,7 +53,7 @@ public class WebCheckTaskImpl implements IWebCheckTask {
 	@Scheduled(initialDelayString = "${healthcheck.initialDelay}", fixedRateString = "${healthcheck.fixedRate}")
 	public void scheduled() {
 		log.info("----------------------------------------------------------------");
-		List<String> modules = null;
+		List<String> modules;
 		try {
 			modules = keyValueClient.getKeys(prefix);
 		} catch (Exception e) {
@@ -95,10 +94,9 @@ public class WebCheckTaskImpl implements IWebCheckTask {
 	/**
 	 * 检查端点的健康状况
 	 *
-	 * @param endPoint
-	 * @return
+	 * @param endPoint 接入端点
+	 * @return 返回健康状态 true: 正常；false: 异常
 	 */
-	@Async
 	public boolean auok(EndPoint endPoint) {
 
 		String ip = endPoint.getIp();
