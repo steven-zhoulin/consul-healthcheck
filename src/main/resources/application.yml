@@ -1,0 +1,21 @@
+server:
+  port: 8888
+  servlet.context-path: /
+
+logging:
+  level:
+    com.consul.docker.healthcheck: info
+
+consul:
+  #address: 10.142.249.9:8100
+  address: 192.168.114.132:8500
+
+healthcheck:
+  initialDelay: 10000
+  fixedRate: 5000
+  retryCount: 3
+  web:
+    prefix: crm-web
+  root:
+    # 上下文为 "/" 的模块，可以配置多个，例如: ngboss,touchframe
+    context: ngboss
