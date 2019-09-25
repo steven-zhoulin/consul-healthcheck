@@ -2,6 +2,7 @@ package com.consul.docker.healthcheck.task.impl;
 
 import com.consul.docker.healthcheck.entity.EndPoint;
 import com.consul.docker.healthcheck.task.IWebCheckTask;
+import com.consul.docker.healthcheck.util.EndPointUtils;
 import com.orbitz.consul.Consul;
 import com.orbitz.consul.KeyValueClient;
 import lombok.extern.slf4j.Slf4j;
@@ -30,19 +31,16 @@ import java.util.*;
 public class WebCheckTaskImpl implements IWebCheckTask {
 
 	@Autowired
-	private Consul consul;
-
-	@Autowired
 	private KeyValueClient keyValueClient;
 
 	@Value("${healthcheck.web.prefix}")
 	private String prefix;
 
-	@Value("${healthcheck.root.context}")
-	private Set<String> rootContexts;
-
 	@Value("${healthcheck.retryCount}")
 	private int retryCount;
+
+	@Value("${healthcheck.root.context}")
+	private Set<String> rootContexts;
 
 	private Set<EndPoint> endPointSet = new TreeSet<>();
 
@@ -62,7 +60,7 @@ public class WebCheckTaskImpl implements IWebCheckTask {
 			return;
 		}
 
-		List<EndPoint> endPoints = parse(modules);
+		List<EndPoint> endPoints = EndPointUtils.parse(modules, rootContexts);
 		for (EndPoint endPoint : endPoints) {
 			if (endPointSet.contains(endPoint)) {
 				// 上一个周期，探测失败遗留下来的接入端点，沿用上一次的对象，因保有探测失败次数。
@@ -163,47 +161,5 @@ public class WebCheckTaskImpl implements IWebCheckTask {
 		keyValueClient.deleteKey(key);
 	}
 
-	/**
-	 * 路径示例:
-	 * <p>
-	 * crm-web/touchframe/
-	 * crm-web/touchframe/192.168.114.132:10001
-	 * crm-web/touchframe/192.168.114.132:10002
-	 * crm-web/touchframe/192.168.114.132:10003
-	 * crm-web/touchframe/192.168.114.132:10004
-	 *
-	 * @param modules
-	 */
-	private List<EndPoint> parse(List<String> modules) {
 
-		List<EndPoint> endPoints = new ArrayList<>(20);
-
-		for (String line : modules) {
-
-			String[] part = StringUtils.split(line, "/");
-			if (3 == part.length) {
-				String[] address = StringUtils.split(part[2], ":");
-				if (2 == address.length) {
-
-					String moduleName = part[1];
-					String ip = address[0];
-					int port = Integer.parseInt(address[1]);
-
-					EndPoint endPoint = new EndPoint();
-					endPoint.setModuleName(moduleName);
-					endPoint.setIp(ip);
-					endPoint.setPort(port);
-					if (rootContexts.contains(moduleName)) {
-						endPoint.setRootContext(true);
-					} else {
-						endPoint.setRootContext(false);
-					}
-
-					endPoints.add(endPoint);
-				}
-			}
-		}
-
-		return endPoints;
-	}
 }

@@ -12,6 +12,12 @@ consul:
   address: 10.135.140.12:8500,10.135.140.13:8500,10.135.140.14:8500
   token: 6545f267-d97d-4824-9ff0-d0a7793a9e5e
 
+zookeeper:
+  url: 10.135.140.12:21810,10.135.140.13:21810,10.135.140.14:21810
+  bashPath: /wade-relax
+  app:
+    groupname: base,itf,flow
+
 healthcheck:
   initialDelay: 10000
   fixedRate: 5000
