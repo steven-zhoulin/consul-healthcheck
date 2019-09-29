@@ -4,6 +4,7 @@
 *.iml
 *.ipr
 .gradle
+gradle
 build
 out
 
