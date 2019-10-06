@@ -7,7 +7,9 @@ apply plugin: 'io.spring.dependency-management'
 
 group = 'com.consul.docker'
 version = '1.0.0'
-sourceCompatibility = '1.8'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+
 
 configurations {
     compileOnly {
