@@ -3,22 +3,17 @@ package com.consul.docker.healthcheck.task.impl;
 import com.consul.docker.healthcheck.entity.EndPoint;
 import com.consul.docker.healthcheck.task.IWebCheckTask;
 import com.consul.docker.healthcheck.util.EndPointUtils;
-import com.orbitz.consul.Consul;
 import com.orbitz.consul.KeyValueClient;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Web 实例健康检查
@@ -81,7 +76,7 @@ public class WebCheckTaskImpl implements IWebCheckTask {
 				int count = endPoint.incrFailCheckCount();
 				if (count >= retryCount) {
 					// 探测失败次数 >= 阀值时
-					delete(endPoint);
+					EndPointUtils.delete(endPoint, keyValueClient, prefix);
 					iterator.remove();
 				}
 			}
@@ -106,60 +101,10 @@ public class WebCheckTaskImpl implements IWebCheckTask {
 		}
 
 		String url = String.format("http://%s:%s/%sprobe.jsp", ip, port, contextPath);
-		boolean status = doGet(url);
+		boolean status = EndPointUtils.doGet(url);
 		log.info(String.format("%-50s  status: %s", url, status ? "up" : "down"));
 		return status;
 
 	}
-
-	/**
-	 * 不带参数的 GET 请求，如果状态码为 200，则返回 true，如果不为 200，则返回 false
-	 *
-	 * @param url
-	 * @return
-	 */
-	private boolean doGet(String url) {
-		CloseableHttpClient httpClient = HttpClients.createDefault();
-		HttpGet httpGet = new HttpGet(url);
-		RequestConfig requestConfig = RequestConfig.custom()
-			.setSocketTimeout(5000)
-			.setConnectTimeout(2000)
-			.setConnectionRequestTimeout(10000).build();
-		httpGet.setConfig(requestConfig);
-
-		CloseableHttpResponse response = null;
-		try {
-			response = httpClient.execute(httpGet);
-			if (HttpStatus.SC_OK == response.getStatusLine().getStatusCode()) {
-				return true;
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage());
-		} finally {
-			try {
-				response.close();
-				httpGet.abort();
-				httpClient.close();
-			} catch (Exception e) {
-				log.error(e.getMessage());
-			}
-		}
-		return false;
-
-	}
-
-	/**
-	 * 摘除检查不通过的访问端点
-	 *
-	 * @param endPoint
-	 */
-	private void delete(EndPoint endPoint) {
-		String ip = endPoint.getIp();
-		int port = endPoint.getPort();
-		String moduleName = endPoint.getModuleName();
-		String key = String.format("%s/%s/%s:%s", prefix, moduleName, ip, port);
-		keyValueClient.deleteKey(key);
-	}
-
 
 }

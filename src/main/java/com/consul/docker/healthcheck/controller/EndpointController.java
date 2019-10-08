@@ -31,14 +31,14 @@ public class EndpointController {
 	@Autowired
 	private KeyValueClient keyValueClient;
 
+	@Autowired
+	private CuratorFramework zkClient;
+
 	@Value("${healthcheck.root.context}")
 	private Set<String> rootContexts;
 
 	@Value("${healthcheck.web.prefix}")
 	private String prefix;
-
-	@Autowired
-	private CuratorFramework zkClient;
 
 	@Value("${zookeeper.bashPath}")
 	private String basePath;

@@ -5,6 +5,8 @@ server:
 logging:
   level:
     com.consul.docker.healthcheck: info
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%logger{45}] %msg%n"
 
 consul:
 #  address: 192.168.114.131:8500,192.168.114.132:8500,192.168.114.133:8500
@@ -24,6 +26,8 @@ healthcheck:
   retryCount: 3
   web:
     prefix: crm-web
+  app:
+    prefix: crm-app
   root:
     # 上下文为 "/" 的模块，可以配置多个，例如: ngboss,touchframe
     context: ngboss

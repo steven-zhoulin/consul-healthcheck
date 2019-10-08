@@ -1,7 +1,15 @@
 package com.consul.docker.healthcheck.util;
 
 import com.consul.docker.healthcheck.entity.EndPoint;
+import com.orbitz.consul.KeyValueClient;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +18,7 @@ import java.util.Set;
 /**
  * @author Steven
  */
+@Slf4j
 public final class EndPointUtils {
 
     /**
@@ -54,5 +63,54 @@ public final class EndPointUtils {
         }
 
         return endPoints;
+    }
+
+    /**
+     * 不带参数的 GET 请求，如果状态码为 200，则返回 true，如果不为 200，则返回 false
+     *
+     * @param url
+     * @return
+     */
+    public static boolean doGet(String url) {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpGet httpGet = new HttpGet(url);
+        RequestConfig requestConfig = RequestConfig.custom()
+            .setSocketTimeout(5000)
+            .setConnectTimeout(2000)
+            .setConnectionRequestTimeout(10000).build();
+        httpGet.setConfig(requestConfig);
+
+        CloseableHttpResponse response = null;
+        try {
+            response = httpClient.execute(httpGet);
+            if (HttpStatus.SC_OK == response.getStatusLine().getStatusCode()) {
+                return true;
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        } finally {
+            try {
+                response.close();
+                httpGet.abort();
+                httpClient.close();
+            } catch (Exception e) {
+                log.error(e.getMessage());
+            }
+        }
+        return false;
+
+    }
+
+    /**
+     * 摘除检查不通过的访问端点
+     *
+     * @param endPoint
+     */
+    public static void delete(EndPoint endPoint, KeyValueClient keyValueClient, String prefix) {
+        String ip = endPoint.getIp();
+        int port = endPoint.getPort();
+        String moduleName = endPoint.getModuleName();
+        String key = String.format("%s/%s/%s:%s", prefix, moduleName, ip, port);
+        keyValueClient.deleteKey(key);
     }
 }
